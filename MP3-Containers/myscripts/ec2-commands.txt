@@ -1,0 +1,192 @@
+
+# ===================== create cluster =======================
+
+# install awscli
+sudo yum update -y
+sudo yum install python3-pip
+pip3 install awscli --upgrade --user
+aws configure
+accsesskey
+secret accesskey
+region: us-east-1
+format: json
+
+# install eksctl
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/latest_release/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+
+sudo mv /tmp/eksctl /usr/local/bin
+
+eksctl version
+
+# install kubectl
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+
+chmod +x ./kubectl
+
+sudo mv ./kubectl /usr/local/bin/kubectl
+
+kubectl version –client
+
+# generate a pair of ssh key
+ssh-keygen -t rsa
+    eks-key
+
+# create cluster with Linux-only workloads
+eksctl create cluster \
+--name prod \
+--version 1.14 \
+--region us-east-1 \
+--nodegroup-name standard-workers \
+--node-type t3.medium \
+--nodes 2 \
+--nodes-min 1 \
+--nodes-max 4 \
+--ssh-access \
+--ssh-public-key eks-key.pub \
+--managed
+
+# check if config correct
+kubectl get svc
+
+# Delete Cluster: https://docs.aws.amazon.com/eks/latest/userguide/delete-cluster.html
+# eksctl delete cluster --name prod
+
+
+# =============================== docker ================================
+# Install Docker
+sudo yum install docker -y 
+# start docker service
+sudo service docker start
+# add ec2-user to Docker, log in again for it to take effect
+sudo usermod -a -G docker ec2-user
+
+
+# in the folder where classify.py and requirements.txt are
+nano Dockerfile
+    FROM python:3
+    COPY classify.py ./classify.py
+    ADD requirements.txt /
+    RUN pip install -r requirements.txt
+    ENV DATASET=mnist
+    ENV TYPE=ff
+    CMD ["python","./classify.py"]
+
+
+# build image
+sudo docker build -t classification .
+
+# run the image
+sudo docker run classification 
+
+#login to dockerhub
+sudo docker login --username=xxxxx
+
+# push to dockerhub 
+sudo docker tag be76f13b6338 xxxxx/classification:ver1
+sudo docker push xxxxx/classification
+
+## config environment variable for classify.python3
+#export DATASET=mnist # {'mnist', 'kmnist'}
+#export TYPE=ff # {'ff','cnn'}
+
+
+# ======================= Kubernetes config =====================
+# ----------- namespace -----------
+
+# # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
+# # create namespace, free-service.yaml
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: free-service
+
+# kubectl create -f ./free-service.yaml
+
+
+# create namesapce in command line
+kubectl create namespace free-service
+
+# ----------- Resource Quota -----------
+# free-quota.yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: free-quota
+spec:
+  hard:
+    limits.cpu: "2"
+
+# link to free-service
+kubectl apply -f free-quota.yaml --namespace=free-service
+
+
+# ------------------------ context --------------------------
+
+kubectl config view
+# prod.us-east-1.eksctl.io
+# xxxxx@prod.us-east-1.eksctl.io
+
+kubectl config set-context free --namespace=free-service \
+  --cluster=prod.us-east-1.eksctl.io \
+  --user=xxxxx@prod.us-east-1.eksctl.io
+
+kubectl config set-context premium --namespace=default \
+  --cluster=prod.us-east-1.eksctl.io \
+  --user=xxxxx@prod.us-east-1.eksctl.io
+
+
+kubectl config use-context free
+kubectl config current-context
+
+
+# # ----------- job -----------
+# # this yaml will be created using Kube python client in the web server script
+
+# # free-job.yaml
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   generateName: ff-deployment-
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: classification
+#         image: docker.io/xxxxx/classification:ver1
+#         env:
+#         - name: DATASET
+#           value: "mnist"
+#         - name: TYPE
+#           value: "ff"
+#       restartPolicy: Never
+#   backoffLimit: 4
+
+# kubectl create -f ./free-job.yaml
+
+
+
+
+
+# delete all jobs
+kubectl config use-context free
+kubectl delete jobs --all
+kubectl config use-context premium
+kubectl delete jobs --all 
+
+# inspect jobs
+kubectl get job --all-namespaces
+
+
+
+
+# ======================== flask server ================================
+# remember to revise security inbound rules, open the port that web server uses
+# in this mp I used 5000, so I added an inbound rule: custom TCP 5000, anywhere
+
+sudo pip3 install kubernetes
+
+sudo pip3 install flask
+
+export FLASK_APP=web_server.py
+python3 web_server.py     # can't use sudo otherwise kube thorws error
+
