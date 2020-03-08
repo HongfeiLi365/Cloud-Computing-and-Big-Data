@@ -20,7 +20,7 @@ lines = sc.textFile(sys.argv[1], 1)
 
 counts = lines.flatMap(link_count_mapper).reduceByKey(lambda a, b: a + b)
 
-counts.sortByKey(ascending=False)
+counts = counts.sortByKey(ascending=False)
 
 tops = counts.sortBy(ascending=False, keyfunc=lambda a: a[1]).take(10)
 tops = sorted(tops)
