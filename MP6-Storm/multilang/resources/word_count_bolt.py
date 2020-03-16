@@ -9,7 +9,7 @@ class CountBolt(storm.BasicBolt):
     def initialize(self, conf, context):
         self._conf = conf
         self._context = context
-
+        self._counter = Counter()
         storm.logInfo("Counter bolt instance starting...")
 
         # Hint: Add necessary instance variables and classes if needed
@@ -18,7 +18,11 @@ class CountBolt(storm.BasicBolt):
         # TODO
         # Task: word count
         # Hint: using instance variable to tracking the word count
-        pass
+        word = tup.values[0]
+        self._counter[word] += 1
+        count = self._counter[word]
+        storm.logInfo("Emitting %s:%s" % (word, count))
+        storm.emit([word, count])
         # End
 
 
