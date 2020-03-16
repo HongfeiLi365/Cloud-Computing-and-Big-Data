@@ -98,8 +98,8 @@ bolts:
   - id: "store-bolt"
     className: "org.apache.storm.redis.bolt.RedisStoreBolt"
     constructorArgs:
-      - "poolConfig"
-      - "storeMapper"
+      - ref: "poolConfig"
+      - ref: "storeMapper"
     parallelism: 3
 
 # stream definitions
