@@ -17,14 +17,24 @@ class FileReaderSpout(storm.Spout):
 
         # TODO:
         # Task: Initialize the file reader
-        pass
+
+        with open(self._conf['filepath']) as f:
+            lines = f.readlines()
+            lines = [x.strip() for x in lines]
+        self.lines = lines
+        self.pos=0
         # End
 
     def nextTuple(self):
         # TODO:
         # Task 1: read the next line and emit a tuple for it
         # Task 2: don't forget to sleep for 1 second when the file is entirely read to prevent a busy-loop
-        pass
+        sentence = self.lines[self.pos]
+        storm.logInfo("Emiting %s" % sentence)
+        storm.emit([sentence])
+
+        self.pos = self.pos + 1
+        time.sleep(1)
         # End
 
 
