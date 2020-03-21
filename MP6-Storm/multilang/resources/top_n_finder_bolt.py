@@ -10,11 +10,12 @@ class TopNFinderBolt(storm.BasicBolt):
         self._conf = conf
         self._context = context
 
-        storm.logInfo("Counter bolt instance starting...")
+        storm.logInfo("TopNFinder bolt instance starting...")
 
         # TODO:
         # Task: set N
-        pass
+        self.N = conf['N']
+        self._counter = Counter()
         # End
 
         # Hint: Add necessary instance variables and classes if needed
@@ -26,7 +27,15 @@ class TopNFinderBolt(storm.BasicBolt):
         Hint: implement efficient algorithm so that it won't be shutdown before task finished
               the algorithm we used when we developed the auto-grader is maintaining a N size min-heap
         '''
-        pass
+        word = tup.values[0]
+        ct = int(tup.values[1])
+        self._counter[word] += ct
+        topn = self._counter.most_common(self.N)
+        s = ""
+        for w, c in topn:
+            s = s + w +', '
+        s = s[:-2]
+        storm.emit(["TopN", s])
         # End
 
 
