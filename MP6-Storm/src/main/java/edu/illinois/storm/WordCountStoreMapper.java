@@ -33,7 +33,7 @@ public class WordCountStoreMapper implements RedisStoreMapper {
     /* ----------------------TODO-----------------------
     Task: define which part of the tuple as the value
     ------------------------------------------------- */
-    return tuple.getStringByField("count");
+    return String.valueOf(tuple.getLongByField("count"));
 		// End
   }
 }
