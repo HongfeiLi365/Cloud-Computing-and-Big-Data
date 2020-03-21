@@ -22,7 +22,13 @@ class NormalizerBolt(storm.BasicBolt):
         # TODO:
         # Task 1: make the words all lower case
         # Task 2: remove the common words
-        pass
+        word = tup.values[0]
+        word = word.lower().strip().strip('\n')
+        if word in self._common_words:
+            pass
+        else:
+            storm.logInfo("Emitting %s" % word)
+            storm.emit([word])
         # End
 
 
