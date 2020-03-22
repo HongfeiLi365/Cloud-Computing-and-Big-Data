@@ -54,9 +54,9 @@ components:
   # src/main/java/edu/illinois/storm/TopNStoreMapper.java
   # redis hash key for part D is "partDTopN"
   - id: "storeMapper"
-    className: "edu.illinois.storm.WordCountStoreMapper"
+    className: "edu.illinois.storm.TopNStoreMapper"
     constructorArgs:
-      - "partDWordCount"
+      - "partDTopN"
 
 
 # spout definitions

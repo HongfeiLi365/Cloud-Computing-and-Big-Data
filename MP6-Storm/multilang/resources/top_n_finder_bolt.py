@@ -29,13 +29,15 @@ class TopNFinderBolt(storm.BasicBolt):
         '''
         word = tup.values[0]
         ct = int(tup.values[1])
-        self._counter[word] += ct
-        topn = self._counter.most_common(self.N)
-        s = ""
-        for w, c in topn:
-            s = s + w +', '
-        s = s[:-2]
-        storm.emit(["TopN", s])
+        if len(word) > 0:
+            self._counter[word] += ct
+            topn = self._counter.most_common(self.N)
+            s = ""
+            for w, c in topn:
+                s = s + w +', '
+            s = s[:-2]
+            storm.logInfo("Emitting %s:%s" % ("top-N", s))
+            storm.emit(["top-N", s])
         # End
 
 
