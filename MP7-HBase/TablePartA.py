@@ -17,5 +17,5 @@ families2 = {
     'taste': dict()
 }
 
-connection.create_table('powers', families1)
+connection.create_table('food', families1)
 
