@@ -1,7 +1,7 @@
 from pyspark import *
 from pyspark.sql import SparkSession
 from graphframes import *
-from collections import defaultdict
+
 
 sc = SparkContext()
 spark = SparkSession.builder.appName('fun').getOrCreate()
@@ -12,12 +12,15 @@ def get_shortest_distances(graphframe, dst_id):
     # Find shortest distances in the given graphframe to the vertex which has id `dst_id`
     # The result is a dictionary where key is a vertex id and the corresponding value is
     # the distance of this node to vertex `dst_id`.
-    result = graphframe.shortestPaths(landmarks=dst_id)
+    result = graphframe.shortestPaths(landmarks=[dst_id])
     result = result.select("id", "distances").collect()
 
-    distances = defaultdict(list)
+    distances = {}
     for row in result:
-        distances[row['id']].append(row['distances'])
+        if len(row['distances']) > 0:
+            distances[row['id']]=row['distances'][dst_id]
+        else:
+            distances[row['id']] = -1
 
     return distances
 
