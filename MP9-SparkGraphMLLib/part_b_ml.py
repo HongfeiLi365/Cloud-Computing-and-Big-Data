@@ -3,6 +3,7 @@ from pyspark.sql import SQLContext
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.linalg import Vectors
 import pyspark.sql.functions as F
+from collections import defaultdict
 
 ############################################
 #### PLEASE USE THE GIVEN PARAMETERS     ###
@@ -28,14 +29,36 @@ def get_clusters(df, num_clusters, max_iterations, initialization_mode,
     # For example, if the output is [["Mercedes", "Audi"], ["Honda", "Hyundai"]]
     # Then "Mercedes" and "Audi" should have the same cluster id, and "Honda" and
     # "Hyundai" should have the same cluster id
-    return [[]]
+    kmeans = Kmeans(k=num_clusters, maxIter=max_iterations, initMode=initialization_mode, seed=seed)
+    model = kmeans.fit(df)
+    transformed = model.transform(df)
+    results = transformed.collect()
+
+    components = defaultdict(list)
+    for row in result:
+        components[row['prediction']].append(row['id'])
+
+    to_return = []
+    for key, value in components.items():
+        to_return.append(value)
+
+    return to_return
 
 
 def parse_line(line):
     # TODO: Parse data from line into an RDD
     # Hint: Look at the data format and columns required by the KMeans fit and
     # transform functions
-    return []
+
+    line = line.split()
+    car_id = line[0]  # TODO: Parse src from line
+    if len(line) > 1:
+        features = line[1:]  # TODO: Parse dst_list from line
+    else:
+        features = []
+    
+    features = Vectors.dense(features)
+    return [car_id, features]
 
 
 if __name__ == "__main__":
@@ -44,8 +67,7 @@ if __name__ == "__main__":
     rdd = f.map(parse_line)
 
     # TODO: Convert RDD into a dataframe
-    df = None
-
+    df = sqlContext.createDataFrame(rdd, ['id','features'])
     clusters = get_clusters(df, NUM_CLUSTERS, MAX_ITERATIONS,
                             INITIALIZATION_MODE, SEED)
     for cluster in clusters:
