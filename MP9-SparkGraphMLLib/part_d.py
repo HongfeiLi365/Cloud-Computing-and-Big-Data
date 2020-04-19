@@ -17,16 +17,18 @@ def predict(df_train, df_test):
 
     # Result: Result should be a list with the trained model's predictions
     # for all the test data points
-    rf = RandomForestClassifier()
+    rf = RandomForestClassifier(numTrees=100, maxDepth=10)
     model = rf.fit(df_train)
-    pred = model.transform(df_test)
-    
-    return pred.prediction
+    results = model.transform(df_test).collect()
+    pred = []
+    for row in results:
+        pred.append(row['prediction'])
+    return pred
 
 def parse_line(line):
     # TODO: Parse data from line into an RDD
     line = line.split(',')
-    label = line[-1] 
+    label = int(line[-1]) 
     features = line[:-1] 
     features = Vectors.dense(features)
     return [features, label]
@@ -47,7 +49,7 @@ def main():
     raw_test_data = sc.textFile("dataset/test-features.data")
 
     # TODO: Convert text file lines into an RDD we can use later
-    rdd_test =raw_test_data.map(lambda line: Vectors.dense(line.split(',')))
+    rdd_test =raw_test_data.map(lambda line: [Vectors.dense(line.split(','))])
 
     # TODO:Create dataframe from RDD
     df_test = sqlContext.createDataFrame(rdd_test, ['features'])
