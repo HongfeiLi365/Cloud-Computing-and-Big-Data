@@ -44,8 +44,8 @@ if __name__ == "__main__":
             edge_list += [(src, dst) for dst in dst_list]
 
     # TODO: Create vertices dataframe
-    vertices = spark.createDataFrame(vertex_list)
-    edges = spark.createDataFrame(edge_list)  # TODO: Create edges dataframe
+    vertices = spark.createDataFrame(vertex_list, ['id', 'name'])
+    edges = spark.createDataFrame(edge_list, ['src', 'dst'])  # TODO: Create edges dataframe
 
     g = GraphFrame(vertices, edges)
     sc.setCheckpointDir("/tmp/connected-components")
