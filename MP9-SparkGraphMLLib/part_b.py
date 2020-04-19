@@ -29,13 +29,13 @@ def get_clusters(df, num_clusters, max_iterations, initialization_mode,
     # For example, if the output is [["Mercedes", "Audi"], ["Honda", "Hyundai"]]
     # Then "Mercedes" and "Audi" should have the same cluster id, and "Honda" and
     # "Hyundai" should have the same cluster id
-    kmeans = Kmeans(k=num_clusters, maxIter=max_iterations, initMode=initialization_mode, seed=seed)
+    kmeans = KMeans(k=num_clusters, maxIter=max_iterations, initMode=initialization_mode, seed=seed)
     model = kmeans.fit(df)
     transformed = model.transform(df)
     results = transformed.collect()
 
     components = defaultdict(list)
-    for row in result:
+    for row in results:
         components[row['prediction']].append(row['id'])
 
     to_return = []
@@ -50,7 +50,7 @@ def parse_line(line):
     # Hint: Look at the data format and columns required by the KMeans fit and
     # transform functions
 
-    line = line.split()
+    line = line.split(',')
     car_id = line[0]  # TODO: Parse src from line
     if len(line) > 1:
         features = line[1:]  # TODO: Parse dst_list from line
